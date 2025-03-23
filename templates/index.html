@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini App</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #centerButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #centerButton:active {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <button id="centerButton">Нажми меня</button>
+
+    <script>
+        document.getElementById('centerButton').addEventListener('click', function() {
+            alert('Кнопка нажата!');
+        });
+    </script>
+</body>
+</html>
