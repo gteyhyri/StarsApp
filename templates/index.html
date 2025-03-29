@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Космическая Звезда</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-color: #000;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 36px;
+            text-align: center;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+            max-width: 80%;
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 20px;
+            letter-spacing: 1px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #speed {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            color: white;
+            font-size: 16px;
+            letter-spacing: 1px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #nftCount {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            color: white;
+            font-size: 16px;
+            letter-spacing: 1px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        #startScreen h1 {
+            font-size: 42px;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        #startScreen p {
+            font-size: 18px;
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #ccc;
+            max-width: 500px;
+        }
+        
+        #startButton, #restartButton, #backToMenuButton {
+            margin-top: 30px;
+            padding: 12px 30px;
+            font-size: 18px;
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        
+        #startButton:hover, #restartButton:hover, #backToMenuButton:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        
+        .final-stats {
+            font-size: 24px;
+            margin: 15px 0;
+            color: #fff;
+        }
+        
+        /* Обновленные стили для нижней навигации */
+        .tg-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            background-color: rgba(23, 33, 43, 0.95);
+            padding: 15px 0;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tg-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .tg-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tg-button i {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            transition: color 0.3s ease;
+        }
+        
+        .tg-button.active {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-color: transparent;
+        }
+        
+        .tg-button.active i {
+            color: #000;
+        }
+        
+        /* Стили для кнопки рефералки */
+        .tg-button.referral i {
+            position: relative;
+            font-size: 24px;
+            color: white;
+            filter: contrast(0) brightness(2);
+        }
+        
+        /* Экран профиля */
+        #profileScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 999;
+        }
+        
+        #profileScreen h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        
+        #profileScreen .username {
+            font-size: 24px;
+            color: #4fc3f7;
+            margin: 20px 0;
+        }
+        
+        /* Стили для статистики профиля */
+        .profile-stats {
+            display: flex;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            color: #4fc3f7;
+        }
+        
+        .stat-item i {
+            font-size: 24px;
+        }
+        
+        /* Меню игры */
+        #gameMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 999;
+        }
+        
+        #gameMenu h2 {
+            font-size: 32px;
+            margin-bottom: 40px;
+        }
+        
+        /* Экран рефералов */
+        #referralScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 999;
+        }
+        
+        #referralScreen h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        
+        #referralScreen p {
+            font-size: 18px;
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #ccc;
+            max-width: 500px;
+        }
+        
+        #referralLink {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 16px;
+            word-break: break-all;
+            max-width: 90%;
+        }
+        
+        /* Новые стили для кнопок */
+        .oval-button {
+            position: relative;
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+            background-color: black;
+            border: 2px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            margin: 10px;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .oval-button:hover {
+            background-color: white;
+            color: black;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        .oval-button:active {
+            transform: scale(0.95);
+        }
+        
+        .oval-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+            transform: scale(0);
+            transition: transform 0.5s ease;
+            border-radius: 50%;
+        }
+        
+        .oval-button:hover::before {
+            transform: scale(1);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="score">0</div>
+    <div id="speed">Скорость: 1x</div>
+    <div id="nftCount">NFT: 0</div>
+    
+    <div id="gameOver">
+        <h2>Игра окончена</h2>
+        <div class="final-stats"><span id="finalScore">0</span> секунд</div>
+        <div class="final-stats"><span id="finalSpeed">1x</span> скорость</div>
+        <div class="final-stats"><span id="finalNft">0</span> NFT собрано</div>
+        <button id="restartButton" class="oval-button">Играть снова</button>
+        <button id="backToMenuButton" class="oval-button">В меню</button>
+    </div>
+    
+    <div id="startScreen">
+        <h1>КОСМИЧЕСКАЯ ЗВЕЗДА</h1>
+        <p>Добро пожаловать в игру!</p>
+        <p>Нажмите на кнопку "Играть" внизу экрана, чтобы начать</p>
+    </div>
+    
+    <div id="gameMenu">
+        <h2>МЕНЮ ИГРЫ</h2>
+        <button id="startGameButton" class="oval-button">НАЧАТЬ ИГРУ</button>
+    </div>
+
+    <div id="profileScreen">
+        <h2>ПРОФИЛЬ</h2>
+        <div class="username">@<span id="username">username</span></div>
+        <div class="profile-stats">
+            <div class="stat-item">
+                <i class="fas fa-clock"></i>
+                <span id="bestTime">0</span> сек
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-coins"></i>
+                <span id="totalNft">0</span> NFT
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-users"></i>
+                <span id="totalReferrals">0</span> рефералов
+            </div>
+        </div>
+        <button id="backToMenuFromProfile" class="oval-button">В МЕНЮ</button>
+    </div>
+    
+    <div id="referralScreen">
+        <h2>ПРИГЛАСИ ДРУЗЕЙ</h2>
+        <p>Приглашайте друзей через наше приложение и получайте 0.5 NFT за каждого приглашенного игрока!</p>
+        <div class="final-stats">Приглашено: <span id="referralCount">0</span> друзей</div>
+        <div class="final-stats">Получено: <span id="earnedNft">0</span> NFT</div>
+        <div id="referralLink">Загрузка ссылки...</div>
+        <button id="copyReferralButton" class="oval-button">КОПИРОВАТЬ ССЫЛКУ</button>
+        <button id="openInAppButton" class="oval-button">ОТКРЫТЬ В ПРИЛОЖЕНИИ</button>
+        <button id="backToMenuFromReferral" class="oval-button">В МЕНЮ</button>
+    </div>
+    <div class="tg-bottom-nav" id="bottomNav">
+        <a href="#" class="tg-button" id="profileButton">
+            <i class="fas fa-user"></i>
+        </a>
+        <a href="#" class="tg-button" id="gameButton">
+            <i class="fas fa-star"></i>
+        </a>
+        <a href="#" class="tg-button referral" id="referralButton">
+            <span style="font-size: 24px;">🤝</span>
+        </a>
+    </div>
+
+    <script>
+        // Раскрываем приложение на весь экран
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Установим username из Telegram
+        document.getElementById('username').textContent = tg.initDataUnsafe.user?.username || 'username';
+        
+        // Генерируем реферальную ссылку
+        const user = tg.initDataUnsafe.user;
+        const referralLink = `https://t.me/hzP2p_bot/starsfree?start=ref${user?.id || '12345'}`;
+        document.getElementById('referralLink').textContent = referralLink;
+        
+        // Инициализация canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const speedElement = document.getElementById('speed');
+        const nftCountElement = document.getElementById('nftCount');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalSpeedElement = document.getElementById('finalSpeed');
+        const finalNftElement = document.getElementById('finalNft');
+        const restartButton = document.getElementById('restartButton');
+        const backToMenuButton = document.getElementById('backToMenuButton');
+        const startScreen = document.getElementById('startScreen');
+        const gameMenu = document.getElementById('gameMenu');
+        const profileScreen = document.getElementById('profileScreen');
+        const referralScreen = document.getElementById('referralScreen');
+        const startGameButton = document.getElementById('startGameButton');
+        const backToMenuFromProfile = document.getElementById('backToMenuFromProfile');
+        const backToMenuFromReferral = document.getElementById('backToMenuFromReferral');
+        const copyReferralButton = document.getElementById('copyReferralButton');
+        const profileButton = document.getElementById('profileButton');
+        const gameButton = document.getElementById('gameButton');
+        const referralButton = document.getElementById('referralButton');
+        const bottomNav = document.getElementById('bottomNav');
+        const referralCountElement = document.getElementById('referralCount');
+        const earnedNftElement = document.getElementById('earnedNft');
+        const totalReferralsElement = document.getElementById('totalReferrals');
+
+        // Настройки игры
+        const settings = {
+            fps: 60,
+            baseCameraSpeed: 100,
+            planetSpawnInterval: 1000,
+            planetWidth: window.innerWidth < 768 ? 40 : 60,
+            planetHeight: window.innerWidth < 768 ? 40 : 60,
+            starSize: window.innerWidth < 768 ? 25 : 35,
+            speedIncreaseInterval: 10000,
+            speedIncreaseFactor: 0.2,
+            trailDuration: 1000,
+            collisionOffset: window.innerWidth < 768 ? 5 : 10,
+            nftSpawnChance: 0.33,
+            nftSize: 20,
+            nftGlowIntensity: 0.8
+        };
+
+        // Состояние игры
+        let gameState = {
+            lastTime: 0,
+            deltaTime: 0,
+            score: 0,
+            nftCollected: 0,
+            isRunning: false,
+            cameraY: 0,
+            starX: 0,
+            starY: 0,
+            planets: [],
+            nfts: [],
+            trails: [],
+            lastPlanetSpawn: 0,
+            lastNftSpawnCheck: 0,
+            currentSpeedMultiplier: 1,
+            lastSpeedIncrease: 0,
+            isDragging: false,
+            referrerId: null
+        };
+
+        // Проверяем реферальный параметр при запуске
+        if (tg.initDataUnsafe.start_param) {
+            const refParam = tg.initDataUnsafe.start_param;
+            if (refParam.startsWith('ref')) {
+                gameState.referrerId = parseInt(refParam.substring(3));
+            }
+        }
+
+        // Размеры canvas
+        function resizeCanvas() {
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            
+            canvas.width = window.innerWidth * devicePixelRatio;
+            canvas.height = window.innerHeight * devicePixelRatio;
+            
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+            
+            gameState.starX = window.innerWidth / 2 - settings.starSize / 2;
+            gameState.starY = window.innerHeight - 100;
+        }
+
+        // Инициализация игры
+        function initGame() {
+            resizeCanvas();
+            gameState = {
+                ...gameState,
+                lastTime: 0,
+                deltaTime: 0,
+                score: 0,
+                nftCollected: 0,
+                isRunning: true,
+                cameraY: 0,
+                starX: canvas.width / 2 / (window.devicePixelRatio || 1) - settings.starSize / 2,
+                starY: canvas.height / (window.devicePixelRatio || 1) - 100,
+                planets: [],
+                nfts: [],
+                trails: [],
+                lastPlanetSpawn: 0,
+                lastNftSpawnCheck: 0,
+                currentSpeedMultiplier: 1,
+                lastSpeedIncrease: 0,
+                isDragging: false
+            };
+            
+            // Скрываем нижнюю навигацию при запуске игры
+            bottomNav.style.display = 'none';
+            
+            for (let i = 0; i < 3; i++) {
+                spawnPlanet();
+            }
+            
+            scoreElement.textContent = '0';
+            speedElement.textContent = 'Скорость: 1x';
+            nftCountElement.textContent = 'NFT: 0';
+            gameOverElement.style.display = 'none';
+            gameMenu.style.display = 'none';
+            profileScreen.style.display = 'none';
+            referralScreen.style.display = 'none';
+            startScreen.style.display = 'none';
+        }
+
+        // Генерация планет
+        function spawnPlanet() {
+            const gap = window.innerWidth < 768 ? 100 : 150;
+            let x, y;
+            
+            let attempts = 0;
+            let validPosition = false;
+            
+            while (!validPosition && attempts < 10) {
+                x = Math.random() * (canvas.width - settings.planetWidth);
+                y = -settings.planetHeight - Math.random() * 200;
+                
+                validPosition = true;
+                for (const planet of gameState.planets) {
+                    if (
+                        x + settings.planetWidth > planet.x && 
+                        x < planet.x + settings.planetWidth && 
+                        y + settings.planetHeight > planet.y && 
+                        y < planet.y + settings.planetHeight
+                    ) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+                
+                attempts++;
+            }
+            
+            if (validPosition) {
+                const types = ['circle', 'hexagon', 'square', 'triangle'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                gameState.planets.push({
+                    x: x,
+                    y: y,
+                    width: settings.planetWidth,
+                    height: settings.planetHeight,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.02,
+                    hasRing: Math.random() > 0.7,
+                    type: type,
+                    lineWidth: 1 + Math.random() * 2
+                });
+            }
+        }
+
+        // Генерация NFT-фрагментов
+        function spawnNft() {
+            const colors = ['#FF00FF', '#9400D3', '#4B0082', '#0000FF'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            gameState.nfts.push({
+                x: Math.random() * (canvas.width - settings.nftSize),
+                y: -settings.nftSize,
+                size: settings.nftSize,
+                color: color,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.05,
+                createdAt: performance.now(),
+                points: []
+            });
+            
+            const nft = gameState.nfts[gameState.nfts.length - 1];
+            const sides = 4 + Math.floor(Math.random() * 3);
+            const center = { x: settings.nftSize/2, y: settings.nftSize/2 };
+            
+            for (let i = 0; i < sides; i++) {
+                const angle = (i * 2 * Math.PI / sides) + Math.random() * 0.5 - 0.25;
+                const distance = settings.nftSize/2 * (0.7 + Math.random() * 0.3);
+                nft.points.push({
+                    x: center.x + Math.cos(angle) * distance,
+                    y: center.y + Math.sin(angle) * distance
+                });
+            }
+        }
+
+        function startDrag(e) {
+            let clientX, clientY;
+            
+            if (e.type.includes('touch')) {
+                if (!e.touches || e.touches.length === 0) return;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+        
+            const starLeft = gameState.starX;
+            const starRight = gameState.starX + settings.starSize;
+            const starTop = gameState.starY;
+            const starBottom = gameState.starY + settings.starSize;
+        
+            if (clientX >= starLeft && clientX <= starRight &&
+                clientY >= starTop && clientY <= starBottom) {
+                gameState.isDragging = true;
+                e.preventDefault();
+            }
+        }
+
+        function endDrag() {
+            gameState.isDragging = false;
+        }
+
+        function updateStarPosition(e) {
+            if (!gameState.isRunning || !gameState.isDragging) return;
+            
+            let clientX, clientY;
+            
+            if (e.type.includes('touch')) {
+                if (!e.touches || e.touches.length === 0) return;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            gameState.trails.push({
+                x: gameState.starX + settings.starSize/2,
+                y: gameState.starY + settings.starSize/2,
+                size: settings.starSize,
+                alpha: 1.0,
+                createdAt: performance.now()
+            });
+            
+            gameState.starX = clientX - settings.starSize / 2;
+            gameState.starY = clientY - settings.starSize / 2;
+        }
+
+        // Обновление игры
+        function update(deltaTime) {
+            if (!gameState.isRunning) return;
+            
+            gameState.score += deltaTime;
+            scoreElement.textContent = Math.floor(gameState.score / 1000);
+            
+            gameState.lastNftSpawnCheck += deltaTime;
+            if (gameState.lastNftSpawnCheck >= 1000) {
+                gameState.lastNftSpawnCheck = 0;
+                if (Math.random() < settings.nftSpawnChance) {
+                    spawnNft();
+                    if (Math.random() < 0.1) spawnNft();
+                }
+            }
+            
+            gameState.lastSpeedIncrease += deltaTime;
+            if (gameState.lastSpeedIncrease >= settings.speedIncreaseInterval) {
+                gameState.currentSpeedMultiplier += settings.speedIncreaseFactor;
+                gameState.lastSpeedIncrease = 0;
+                speedElement.textContent = `Скорость: ${gameState.currentSpeedMultiplier.toFixed(1)}x`;
+            }
+            
+            const now = performance.now();
+            gameState.trails = gameState.trails.filter(trail => {
+                const age = now - trail.createdAt;
+                if (age > settings.trailDuration) return false;
+                
+                trail.alpha = 1 - (age / settings.trailDuration);
+                trail.size = settings.starSize * (0.3 + 0.7 * (1 - age/settings.trailDuration));
+                return true;
+            });
+            
+            gameState.lastPlanetSpawn += deltaTime;
+            if (gameState.lastPlanetSpawn >= settings.planetSpawnInterval / gameState.currentSpeedMultiplier) {
+                spawnPlanet();
+                gameState.lastPlanetSpawn = 0;
+            }
+            
+            for (let i = gameState.planets.length - 1; i >= 0; i--) {
+                const planet = gameState.planets[i];
+                planet.y += settings.baseCameraSpeed * gameState.currentSpeedMultiplier * (deltaTime / 1000);
+                
+                if (planet.y > canvas.height) {
+                    gameState.planets.splice(i, 1);
+                }
+            }
+            
+            for (let i = gameState.nfts.length - 1; i >= 0; i--) {
+                const nft = gameState.nfts[i];
+                nft.y += settings.baseCameraSpeed * gameState.currentSpeedMultiplier * (deltaTime / 1000);
+                nft.rotation += nft.rotationSpeed;
+                
+                const starCenterX = gameState.starX + settings.starSize/2;
+                const starCenterY = gameState.starY + settings.starSize/2;
+                const nftCenterX = nft.x + nft.size/2;
+                const nftCenterY = nft.y + nft.size/2;
+                
+                const distance = Math.sqrt(
+                    Math.pow(starCenterX - nftCenterX, 2) + 
+                    Math.pow(starCenterY - nftCenterY, 2)
+                );
+                
+                if (distance < (settings.starSize/2 + nft.size/2)) {
+                    gameState.nfts.splice(i, 1);
+                    gameState.nftCollected++;
+                    nftCountElement.textContent = `NFT: ${gameState.nftCollected}`;
+                    
+                    for (let j = 0; j < 10; j++) {
+                        gameState.trails.push({
+                            x: nftCenterX,
+                            y: nftCenterY,
+                            size: 5 + Math.random() * 10,
+                            alpha: 1.0,
+                            createdAt: now,
+                            color: nft.color
+                        });
+                    }
+                    continue;
+                }
+
+                if (nft.y > canvas.height) {
+                    gameState.nfts.splice(i, 1);
+                }
+            }
+            
+            if (gameState.starY + settings.starSize > canvas.height || 
+                gameState.starY < 0 ||
+                gameState.starX + settings.starSize > canvas.width ||
+                gameState.starX < 0) {
+                endGame();
+                return;
+            }
+            
+            for (const planet of gameState.planets) {
+                const offset = settings.collisionOffset;
+                if (
+                    gameState.starX + settings.starSize - offset > planet.x + offset && 
+                    gameState.starX + offset < planet.x + planet.width - offset && 
+                    gameState.starY + settings.starSize - offset > planet.y + offset && 
+                    gameState.starY + offset < planet.y + planet.height - offset
+                ) {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        // Отрисовка игры
+        function render() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (!gameState.backgroundStars) {
+                gameState.backgroundStars = [];
+                for (let i = 0; i < 200; i++) {
+                    gameState.backgroundStars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: 0.5 + Math.random() * 1.5,
+                        alpha: 0.2 + Math.random() * 0.8
+                    });
+                }
+            }
+            
+            for (const star of gameState.backgroundStars) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            }
+            
+            for (const trail of gameState.trails) {
+                ctx.save();
+                ctx.globalAlpha = trail.alpha * 0.6;
+                
+                const trailColor = trail.color || 'rgba(255, 235, 59, 0.8)';
+                const trailGradient = ctx.createRadialGradient(
+                    trail.x, trail.y, 0,
+                    trail.x, trail.y, trail.size * 0.7
+                );
+                trailGradient.addColorStop(0, trailColor);
+                trailGradient.addColorStop(1, trail.color ? 
+                    trailColor.replace(')', ', 0)').replace('rgb', 'rgba') : 
+                    'rgba(255, 235, 59, 0)');
+                
+                ctx.fillStyle = trailGradient;
+                ctx.beginPath();
+                ctx.arc(trail.x, trail.y, trail.size * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+    
+            for (const planet of gameState.planets) {
+                ctx.save();
+                ctx.translate(planet.x + planet.width / 2, planet.y + planet.height / 2);
+                ctx.rotate(planet.rotation);
+                planet.rotation += planet.rotationSpeed;
+                
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = planet.lineWidth;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+                
+                switch (planet.type) {
+                    case 'circle':
+                        ctx.beginPath();
+                        ctx.arc(0, 0, planet.width / 2, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.arc(0, 0, planet.width / 3, 0, Math.PI * 2);
+                        ctx.stroke();
+                        break;
+                        
+                    case 'hexagon':
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (i * 2 * Math.PI / 6) - Math.PI / 2;
+                            const x = Math.cos(angle) * planet.width / 2;
+                            const y = Math.sin(angle) * planet.width / 2;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (i * 2 * Math.PI / 6) - Math.PI / 2;
+                            const x = Math.cos(angle) * planet.width / 3;
+                            const y = Math.sin(angle) * planet.width / 3;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.stroke();
+                        break;
+                        
+                    case 'square':
+                        ctx.beginPath();
+                        ctx.rect(-planet.width / 2, -planet.height / 2, planet.width, planet.height);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(-planet.width / 2, -planet.height / 2);
+                        ctx.lineTo(planet.width / 2, planet.height / 2);
+                        ctx.moveTo(-planet.width / 2, planet.height / 2);
+                        ctx.lineTo(planet.width / 2, -planet.height / 2);
+                        ctx.stroke();
+                        break;
+                        
+                    case 'triangle':
+                        ctx.beginPath();
+                        ctx.moveTo(0, -planet.height / 2);
+                        ctx.lineTo(planet.width / 2, planet.height / 2);
+                        ctx.lineTo(-planet.width / 2, planet.height / 2);
+                        ctx.closePath();
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.arc(0, 0, planet.width / 4, 0, Math.PI * 2);
+                        ctx.stroke();
+                        break;
+                }
+                
+                if (planet.hasRing) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, planet.width * 0.7, planet.width * 0.15, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, planet.width * 0.5, planet.width * 0.1, Math.PI/4, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+            
+            for (const nft of gameState.nfts) {
+                ctx.save();
+                ctx.translate(nft.x + nft.size/2, nft.y + nft.size/2);
+                ctx.rotate(nft.rotation);
+                
+                const glowGradient = ctx.createRadialGradient(
+                    0, 0, 0,
+                    0, 0, nft.size
+                );
+                glowGradient.addColorStop(0, `${nft.color}${Math.floor(settings.nftGlowIntensity * 255).toString(16).padStart(2, '0')}`);
+                glowGradient.addColorStop(1, `${nft.color}00`);
+                
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, nft.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = nft.color;
+                ctx.beginPath();
+                if (nft.points.length > 0) {
+                    ctx.moveTo(nft.points[0].x - nft.size/2, nft.points[0].y - nft.size/2);
+                    for (let i = 1; i < nft.points.length; i++) {
+                        ctx.lineTo(nft.points[i].x - nft.size/2, nft.points[i].y - nft.size/2);
+                    }
+                    ctx.closePath();
+                } else {
+                    ctx.rect(-nft.size/2, -nft.size/2, nft.size, nft.size);
+                }
+                ctx.fill();
+                
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            const centerX = gameState.starX + settings.starSize / 2;
+            const centerY = gameState.starY + settings.starSize / 2;
+                    
+            const glowGradient = ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, settings.starSize * 1.5
+            );
+            glowGradient.addColorStop(0, 'rgba(255, 235, 59, 0.8)');
+            glowGradient.addColorStop(1, 'rgba(255, 235, 59, 0)');
+            
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, settings.starSize * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            const starGradient = ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, settings.starSize / 2
+            );
+            starGradient.addColorStop(0, '#FFF');
+            starGradient.addColorStop(0.7, '#FFEB3B');
+            starGradient.addColorStop(1, '#FF9800');
+            
+            ctx.fillStyle = starGradient;
+            
+            const spikes = 5;
+            const outerRadius = settings.starSize / 2;
+            const innerRadius = outerRadius / 2;
+            
+            let rot = Math.PI / 2 * 3;
+            let step = Math.PI / spikes;
+        
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                const x = centerX + Math.cos(rot) * outerRadius;
+                const y = centerY + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+        
+                ctx.lineTo(
+                    centerX + Math.cos(rot) * innerRadius,
+                    centerY + Math.sin(rot) * innerRadius
+                );
+                rot += step;
+            }
+            
+            ctx.lineTo(centerX, centerY - outerRadius);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, outerRadius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Завершение игры
+        function endGame() {
+            gameState.isRunning = false;
+            const finalTime = Math.floor(gameState.score / 1000);
+            finalScoreElement.textContent = finalTime;
+            finalSpeedElement.textContent = `${gameState.currentSpeedMultiplier.toFixed(1)}x`;
+            finalNftElement.textContent = gameState.nftCollected;
+            gameOverElement.style.display = 'block';
+            
+            // Показываем нижнюю навигацию после завершения игры
+            bottomNav.style.display = 'flex';
+        
+            // Получаем данные пользователя
+            const user = tg.initDataUnsafe.user;
+            const user_id = user?.id || 0;
+            const username = user?.username || 'unknown';
+        
+            // Отправляем данные на сервер
+            fetch('/save_game_result', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: user_id,
+                    username: username,
+                    game_time: finalTime,
+                    nft_collected: gameState.nftCollected,
+                    referrer_id: gameState.referrerId
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data saved:', data);
+                // Обновляем данные профиля после сохранения
+                loadProfileData();
+            })
+            .catch(error => {
+                console.error('Error saving data:', error);
+            });
+        }
+
+        function loadProfileData() {
+            const user = tg.initDataUnsafe.user;
+            const user_id = user?.id || 0;
+            
+            fetch(`/get_user_data?user_id=${user_id}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Profile data received:', data);
+                document.getElementById('bestTime').textContent = data.best_time || 0;
+                document.getElementById('totalNft').textContent = data.total_nft || 0;
+                document.getElementById('referralCount').textContent = data.referral_count || 0;
+                document.getElementById('earnedNft').textContent = (data.referral_count || 0) * 0.5;
+                document.getElementById('totalReferrals').textContent = data.referral_count || 0;
+            })
+            .catch(error => {
+                console.error('Error loading profile:', error);
+                document.getElementById('bestTime').textContent = 0;
+                document.getElementById('totalNft').textContent = 0;
+                document.getElementById('referralCount').textContent = 0;
+                document.getElementById('earnedNft').textContent = 0;
+                document.getElementById('totalReferrals').textContent = 0;
+            });
+        }
+        
+        // Игровой цикл
+        function gameLoop(timestamp) {
+            if (!gameState.lastTime) gameState.lastTime = timestamp;
+            gameState.deltaTime = timestamp - gameState.lastTime;
+            gameState.lastTime = timestamp;
+            
+            update(gameState.deltaTime);
+            render();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Обработчики событий
+        window.addEventListener('resize', resizeCanvas);
+        
+        canvas.addEventListener('mousedown', startDrag);
+        canvas.addEventListener('mousemove', updateStarPosition);
+        canvas.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('mouseleave', endDrag);
+        
+        canvas.addEventListener('touchstart', startDrag);
+        canvas.addEventListener('touchmove', updateStarPosition);
+        canvas.addEventListener('touchend', endDrag);
+        
+        // Навигация
+        restartButton.addEventListener('click', () => {
+            initGame();
+            requestAnimationFrame(gameLoop);
+        });
+        
+        backToMenuButton.addEventListener('click', () => {
+            gameOverElement.style.display = 'none';
+            gameMenu.style.display = 'flex';
+            bottomNav.style.display = 'flex';
+        });
+        
+        startGameButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            initGame();
+            requestAnimationFrame(gameLoop);
+        });
+        
+        backToMenuFromProfile.addEventListener('click', () => {
+            profileScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            bottomNav.style.display = 'flex';
+        });
+        
+        backToMenuFromReferral.addEventListener('click', () => {
+            referralScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            bottomNav.style.display = 'flex';
+        });
+        
+        // Обработчик для кнопки профиля
+        profileButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            startScreen.style.display = 'none';
+            gameMenu.style.display = 'none';
+            gameOverElement.style.display = 'none';
+            referralScreen.style.display = 'none';
+            profileScreen.style.display = 'flex';
+            loadProfileData();
+        });
+        
+        // Обработчик для кнопки игры
+        gameButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            startScreen.style.display = 'none';
+            profileScreen.style.display = 'none';
+            gameOverElement.style.display = 'none';
+            referralScreen.style.display = 'none';
+            gameMenu.style.display = 'flex';
+        });
+
+        // Обработчик для кнопки рефералки
+        referralButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            startScreen.style.display = 'none';
+            gameMenu.style.display = 'none';
+            profileScreen.style.display = 'none';
+            gameOverElement.style.display = 'none';
+            referralScreen.style.display = 'flex';
+            loadProfileData();
+        });
+
+        // Копирование реферальной ссылки
+        copyReferralButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(referralLink)
+                .then(() => {
+                    tg.showAlert('Ссылка скопирована в буфер обмена!');
+                })
+                .catch(err => {
+                    console.error('Ошибка копирования: ', err);
+                    tg.showAlert('Не удалось скопировать ссылку');
+                });
+        });
+        
+        // Начальная инициализация
+        resizeCanvas();
+        
+        // Показываем стартовый экран
+        startScreen.style.display = 'flex';
+        bottomNav.style.display = 'flex';
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
